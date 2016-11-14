@@ -22,7 +22,8 @@
 	var app = angular.module('Main', 
 			[
 				'ngRoute', 
-				'ngAnimate', 
+				'ngSanitize', 
+				/*'ngAnimate', */
 				'ui.bootstrap',
 				'ngTagsInput'
 			]
@@ -213,7 +214,9 @@
 	// configure
 	app.config([
 		'$routeProvider',
-		function($routeProvider) {
+		'$compileProvider', 
+		function($routeProvider, $compileProvider) {
+			//$compileProvider.debugInfoEnabled(false);
 		
 			$routeProvider
 				.when('/', {

@@ -144,12 +144,16 @@
 						locked: true,
 						value: person.name,
 						value2: person.title,
+						css: 'person',
+						cssValueSpan: 'person'
 					},
 					summary: {
 						key: 'summary',
 						locked: true,
 						value: 0,
-						suffix: '%'
+						suffix: '%',
+						css: '',
+						cssValueSpan: ''
 					}
 				};
 
@@ -629,6 +633,15 @@
 			
 		};
 
+		private.escapeSpecialChars = function(text) {
+			// whatever we escape here, we'll have to unescape in the csv export in utilsService.js
+			return (text || '')
+				.replace('\'', '&rsquo;')
+				.replace('©', '&copy;')
+				.replace('®', '&reg;')
+				.replace('™', '&trade;');
+		};
+
 		/**
 		 * @method getModel
 		 * @decsription
@@ -647,15 +660,33 @@
 					show: true,
 					locked: true,
 					css: 'th-category',
-					name:  ''
+					name:  '',
+					type: '',
+					/* front end things */
+					title: 'Click to expand Category',
+					removeTitle: 'Remove Category',
+					addCss: {
+						rowThMiddle: 'row-th-middle',
+						rowThMiddleInner: 'row-th-middle-inner',
+						rowThText: 'row-th-text'
+					}
 				}, {
 					id: 'summary',
 					key: 'summary',
 					position:  1,
 					show: true,
 					locked: true,
-					css: 'th-summary'
+					css: 'th-summary',
 					//name:  this.totCompletionTitle /* 'Tot Completion % for ...' */
+					type: '',
+					/* front end things */
+					title: 'Click to expand Category',
+					removeTitle: 'Remove Category',
+					addCss: {
+						rowThMiddle: 'row-text',
+						rowThMiddleInner: '',
+						rowThText: ''
+					}
 				}],
 				result: {
 					tot: 10,
@@ -675,6 +706,8 @@
 			utilsService.fastLoop(data.segments, function(course, colGroupPosition) {
 
 				// group cell
+				var colName = private.escapeSpecialChars(course.title || course.name);
+				
 				var colGroup = {
 					isGroup: true,
 					id: course.id,
@@ -683,9 +716,17 @@
 					position:  model.columns.length,
 					groupPosition: colGroupPosition,
 					locked: false,
-					css: 'th-course valign-top',
-					name: (course.title || course.name),
-					type: course.type
+					css: 'th-course valign-top pointer',
+					name: colName,
+					type: course.type,
+					/* front end things */
+					title: 'Click to expand Category',
+					removeTitle: 'Remove Category',
+					addCss: {
+						rowThMiddle: 'row-text',
+						rowThMiddleInner: '',
+						rowThText: ''
+					}
 				};
 
 				// push row
@@ -695,6 +736,10 @@
 				var courseLos = (course.learning_objects || course.los);
 				utilsService.fastLoop(courseLos, function(section) {
 					// child cell
+					var colChildName = private.escapeSpecialChars(section.title || section.name);
+
+					//console.log('colChildName', colChildName);
+
 					var colChild = {
 						isChild: true,
 						parentId: course.id,
@@ -704,8 +749,16 @@
 						locked: false,
 						calculate: true, /* by default child columns are calculated when hidden, unless specifically hidden by user action, in which case calculate is also set to false */
 						css: 'th-section valign-top',
-						name: (section.title || section.name),
-						type: section.type
+						name: colChildName,
+						type: section.type,
+						/* front end things */
+						title: '',
+						removeTitle: 'Remove Course',
+						addCss: {
+							rowThMiddle: 'row-text',
+							rowThMiddleInner: '',
+							rowThText: ''
+						}
 					};
 
 					/*
@@ -735,7 +788,9 @@
 			data.stores = _.sortBy(data.stores, 'name').reverse();
 
 			var peopleSorter = function(person) {
-				return person.title.toLowerCase().indexOf('manager') === -1 ? person.name : -1;
+				return person.title.toLowerCase().indexOf('manager') === -1 
+					? (person.name && person.name.length && person.name.substring(0, 1)) 
+					: '';
 			};
 
 			utilsService.fastLoop(data.stores, function(store) {

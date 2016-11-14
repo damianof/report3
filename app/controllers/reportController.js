@@ -323,8 +323,7 @@
 
 		// method that handles clicks on the header cell text
 		$scope.onHeaderCellClick = function(col) {
-			//utilsService.safeLog('onHeaderCellClick');
-			utilsService.safeLog('onHeaderCellClick col', col);
+			//utilsService.safeLog('onHeaderCellClick col', col);
 			if (col.position > 1) {
 				$scope.expandChildColumns(col);
 			}
@@ -467,15 +466,16 @@
 				msg: 'Hide row ' + row.category.value
 			});
 
-			if (parentRow) {
-				parentRow.refreshing = true;
-			}
 			row.show = false;
 
-			// update values
-			$scope.recalculate();
-
+			// only if we are hiding a childRow we'll refresh the calculations
+			// (no need to recalculate when hiding a group row)
 			if (parentRow) {
+				parentRow.refreshing = true;
+
+				// update values
+				$scope.recalculate();
+
 				$timeout(function() {
 					parentRow.refreshing = false;
 				}, 125);
@@ -557,18 +557,17 @@
 			}
 		};
 
-		$scope.displayHideGroupCol = function() {
-			return _.filter($scope.model.columns, function (c) {
-				return c.isGroup && c.show;
-			}).length > 1;
-		};
-
-		$scope.displayHideChildCol = function(col) {
-			return !col.locked 
-				&& col.isChild 
+		$scope.displayRemoveCol = function(col) {
+			if (col.isChild) {
+				return !col.locked 
 				&& _.filter($scope.model.columns, function (c) {
 					return c.parentId === col.parentId && c.show;
 				}).length > 1;
+			} else {
+				return _.filter($scope.model.columns, function (c) {
+					return c.isGroup && c.show;
+				}).length > 1;
+			}
 		};
 
 		$scope.displayHideRow = function(parentRow) {
@@ -629,14 +628,12 @@
 		};
 
 		$scope.thTextCss = function(c) {
-			var result = 'th-text' + (c.position > 1 ? ' pointer' : '');
-			if ((c.isGroup || c.isChild || c.key === 'summary') && c.name.length > 39) {
-				result += ' smaller-text';
+			if ((c.isGroup || c.isChild || c.key === 'summary') && (c.name || '').length > 39) {
+				return 'th-text smaller-text';
+			} else {
+				return 'th-text';
 			}
-
-			return result;
 		};
-
 
 		var onDataError = function(err) {
 			utilsService.safeLog('reportController.onDataError', err);
@@ -653,7 +650,7 @@
 			$scope.data = dataService.fixReportAPIData(data, reportConfigStrategy);
 			// get the report model from reportService
 			$scope.model = reportService.getModel(data, commonConfig.totCompletionTitlePrefix + $scope.reportTitle);
-			
+		
 			// distinct peopleOrgs
 			$scope.peopleOrgs = data.peopleOrgs;
 			$scope.displayViewReportFor = sessionParams.organization === 'ddbr' || data.peopleOrgs.length > 1;
@@ -762,14 +759,14 @@
 				}
 			} else {
 				//var fileName = 'data/report.json?' + Math.random();
-				// //var fileName = 'data/report-generated1.json?' + Math.random();
+				//var fileName = 'data/report-generated1.json?' + Math.random();
 				// //var fileName = 'data/report-generated2.json?' + Math.random();
 				// //var fileName = 'data/single-pc.json?' + Math.random();
 				// //var fileName = 'data/single-pc-single-segment.json?' + Math.random();
 
-				var fileName = 'data/janic-' + params.reportId + '.json?' + Math.random();
+				//var fileName = 'data/janic-' + params.reportId + '.json?' + Math.random();
 
-				//var fileName = 'data/' + params.reportId + '.json?' + Math.random();
+				var fileName = 'data/' + params.reportId + '.json?' + Math.random();
 				utilsService.safeLog('fileName', fileName);
 				// simulate delay
 				setTimeout(function() {
