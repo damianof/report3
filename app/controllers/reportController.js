@@ -3,7 +3,7 @@
 	// create controller
 	window.controllers = window.controllers || {};
   
-    window.controllers.reportController = function($scope, $location, $timeout, $interval, 
+    window.controllers.reportController = function($scope, $location, $timeout, $interval, $document, 
 		utilsService, configService, undoServiceFactory, dataService, reportService) {
 		
 		var commonConfig = configService.getCommonConfig(),
@@ -39,6 +39,47 @@
 		
 		$scope.title = $scope.reportTitle + ' Report';
 		$scope.refreshing = false;
+
+
+		$scope.dom = {
+			tableFixed: angular.element(document.getElementById('table-fixed')),
+			tableScroll: angular.element(document.getElementById('table-scroll')),
+			tableHorizScrollContainer: angular.element(document.getElementById('table-horiz-scroll')),
+			tableVertScrollContainer: angular.element(document.getElementById('table-vert-scroll')),
+			tableVertScrollContainer: angular.element(document.getElementById('table-vert-scroll'))
+		};
+
+		$scope.dom.tableHorizScrollContainer.on('scroll', function() {
+			$timeout(function() {
+				var width = 'width: ' + ($scope.dom.tableScroll[0].offsetWidth + 'px');
+				$scope.dom.tableVertScrollContainer.attr('style', width);
+				$scope.dom.tableFixed.attr('style', width); /* causes flashing: need to do more testing to see if this line can be removed */
+
+				// var thFixed = angular.element(document.querySelector('.table-fixed > thead .th-category'));
+				// var thScroll = angular.element(document.querySelector('.table-scroll > thead .th-category'));
+				// var width = 'width: ' + (thScroll[0].offsetWidth + 'px');
+				// console.log('category width', width);
+				// thFixed.attr('style', width);
+				// thScroll.attr('style', width);
+$('.table-scroll tr:eq(1) td').each(function (i) {
+	var _this = $(this);
+	$('.table-fixed tr:eq(1) td:eq(' + i + ')').width(_this.width());
+});
+			}, 0);
+		});
+
+		$scope.syncTableScroll = function() {
+			var el = $scope.dom.tableHorizScrollContainer;
+			$timeout(function() {
+				//el.scrollLeft(left), 
+				el.triggerHandler('scroll');
+
+			// 	$timeout(function() {
+			// 		el.scrollLeft(0), el.triggerHandler('scroll');
+			// 	}, 0);
+			}, 0);
+		};
+
 
 		Object.defineProperty($scope, 'tokenError', {
 			get: function() {
@@ -95,6 +136,12 @@
 			value: 0,
 			intervalId: undefined
 		};
+
+		$scope.$on('$routeChangeStart', function () { // (scope, next, current)
+			if (angular.isDefined($scope.progressBar.intervalId)) {
+				$interval.cancel($scope.progressBar.intervalId);
+			}
+		});
 
 		$scope.increaseProgressBar = function() {
 			var step = 10;
@@ -315,10 +362,12 @@
 			$scope.model.topLevelColumn = $scope.topLevelColumn;
 			reportService.recalculate($scope.model);
 			utilsService.safeLog('recalculate completed');
+			
+			$scope.syncTableScroll();
 
 			$timeout(function() {
 				$scope.refreshing = false;
-			}, 500);
+			}, 125);
 		};
 
 		// method that handles clicks on the header cell text
@@ -440,9 +489,10 @@
 				properties: undoProperties,
 				msg: undoMsg + ' column ' + col.name
 			});
-
+			
 			// update values
 			$scope.recalculate();
+			$scope.syncTableScroll();
 		};
 
 		/**
@@ -478,7 +528,9 @@
 
 				$timeout(function() {
 					parentRow.refreshing = false;
-				}, 125);
+				}, 0);
+			} else {
+				$scope.syncTableScroll();
 			}
 		};
 
@@ -601,16 +653,19 @@
 			totColumns = totColumns < 3 ? 3 : totColumns;
 
 			var storeWidthPercent = 10, summaryWidthPercent = 5;
-			var useFixedWidth = totColumns > 10;
+			var useFixedWidth = true; //totColumns > 10;
+
 			var styleObj = {
 			};
 
 			if (col.key === 'category') {
-				styleObj.width = '200px'; //useFixedWidth ? '200px' : storeWidthPercent + '%';
+				styleObj.width = '280px'; //useFixedWidth ? '200px' : storeWidthPercent + '%';
 				styleObj['min-width'] = styleObj.width;
+				styleObj['max-width'] = styleObj.width;
 			} else if (col.key === 'summary') {
 			 	styleObj.width = '130px'; //useFixedWidth ? '130px' : summaryWidthPercent + '%';
-				 styleObj['min-width'] = styleObj.width;
+				styleObj['min-width'] = styleObj.width;
+				styleObj['max-width'] = styleObj.width;
 			} else {
 				if (useFixedWidth) {
 					styleObj.width = '130px';
@@ -621,6 +676,7 @@
 
 				if (useFixedWidth) {
 					styleObj['min-width'] = styleObj.width;
+					styleObj['max-width'] = styleObj.width;
 				}
 			}
 			
@@ -634,6 +690,7 @@
 				return 'th-text';
 			}
 		};
+		
 
 		var onDataError = function(err) {
 			utilsService.safeLog('reportController.onDataError', err);
@@ -668,6 +725,8 @@
 						return col.isGroup;
 					});
 					$scope.expandChildColumns(firstColGroup);
+				} else {
+					$scope.syncTableScroll();
 				}
 			};
 
@@ -691,12 +750,6 @@
 				}, 25);
 			}, 25);
 		};
-
-		$scope.$on('$routeChangeStart', function () { // (scope, next, current)
-			if (angular.isDefined($scope.progressBar.intervalId)) {
-				$interval.cancel($scope.progressBar.intervalId);
-			}
-		});
 
 		// helper to get the data
 		var getData = function(w) {
@@ -769,7 +822,7 @@
 				var fileName = 'data/' + params.reportId + '.json?' + Math.random();
 				utilsService.safeLog('fileName', fileName);
 				// simulate delay
-				setTimeout(function() {
+				$timeout(function() {
 					dataService.getData(fileName)
 						.then(onDataComplete, onDataError);
 				}, 500);

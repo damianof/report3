@@ -42,6 +42,10 @@ body {
 	margin-top: 40px;
 }
 
+.m-b-0 {
+	margin-bottom: 0;
+}
+
 .p-l-0 {
     padding-left: 0;
 }
@@ -143,7 +147,7 @@ i.fa {
 .row-th-middle-inner{
     display: table-cell;
     vertical-align: middle;
-    height: 55px;
+    height: 25px;
 }
 .row-th-text {
     clear: both !important;
@@ -178,7 +182,7 @@ i.fa {
 	font-size: 16px;
 }
 .table > tbody > tr > td.first {
-	word-break: break-word;
+	word-break: break-word; /* break-word causes the two table not being in sync with td widths */
 	vertical-align: middle;
     padding-left: 12px;
 }
@@ -365,7 +369,7 @@ td.col-group.person > .row-text {
 
 .col-child.summary .row-text {
 	width: 100%;
-	height:100%;
+	height: 100%;
 	/*outline: solid 0px red;*/
 	font-size: 24px;
 	font-weight: bold;
@@ -375,7 +379,7 @@ td.col-group.person > .row-text {
 
 .col-child > .row-text {
 	width: 100%;
-	height:100%;
+	height: 100%;
 	/*outline: solid 0px green;*/
 	font-size: 18px;
 	text-align: center;
@@ -402,7 +406,7 @@ td.person > .row-text > span.person-title {
 .row-icon {
 	width: 20px;
 	margin: 0 2px 0 2px;
-	height:100%;
+	height: 100%;
 	text-align: center;
 }
 
@@ -473,9 +477,14 @@ div.height-40 {
 	color: #444444;
 }
 
+.container, 
+.banner {
+    width: 95%;
+	max-width: 95%;
+}
+
 .container {
 	border-radius: 8px;
-    width: 1350px;
 }
 
 .container.report {
@@ -499,8 +508,6 @@ div.height-40 {
 /* banner */
 .banner {
     box-sizing: border-box;
-	width: 1350px;
-    max-width: 1350px;
     box-sizing: border-box;
     margin: 20px auto;
     height: 60px;
@@ -756,20 +763,35 @@ div.height-40 {
 
 /* begin: css for horiz table scrolling */
 .table {
-  outline: solid 0px red;
-  width: inherit; 
-}
-
-div.table-outer {
-  outline: solid 0px green;
-  width: 1320px;
-  max-width: 1320px;
-  overflow-y: scroll; 
-}
-
-div.table-inner {
-  outline: solid 0px yellow;
   width: auto;
+}
+
+.table.table-fixed {
+
+}
+
+.table.table-scroll {
+  /*outline: dashed 1px gray;*/
+  margin-top: -116px!important;
+}
+.table.table-scroll thead {
+  /*visibility: hidden;*/
+}
+
+#table-horiz-scroll {
+  overflow-x: scroll;
+  overflow-y: hidden;
+  height: 700px;
+  max-height: 700px;
+  /*outline: dashed 2px blue;*/
+}
+
+#table-vert-scroll {
+  overflow-x: scroll;
+  overflow-y: scroll;
+  height: 700px;
+  max-height: 700px;
+  /*outline: dashed 2px green;*/
 }
 /* end: css for horiz table scrolling */
 
